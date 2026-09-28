@@ -41,7 +41,7 @@ agent(
           session store. Focus on concrete steps.",
   systemPrompt: "You are a planning specialist. Produce a numbered plan with
                  specific files and functions to modify. Do NOT make changes.",
-  model: "aperture/gpt-5.6-sol",
+  model: "aperture/gpt-6-sol",
   thinking: "high",
   tools: ["read", "grep", "find", "ls"]
 )
@@ -56,7 +56,7 @@ agent(
   prompt: "Implement input validation on the /api/users endpoint. Add Zod
           schemas for the request body and return 400 on validation failure."
   thinking: "medium",
-  model: "aperture/gpt-5.6-luna"
+  model: "aperture/gpt-6-luna"
 )
 ```
 
