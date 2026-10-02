@@ -41,7 +41,7 @@ agent(
           session store. Focus on concrete steps.",
   systemPrompt: "You are a planning specialist. Produce a numbered plan with
                  specific files and functions to modify. Do NOT make changes.",
-  model: "aperture/gpt-6-sol",
+  model: "aperture/gpt-6.1-sol",
   thinking: "high",
   tools: ["read", "grep", "find", "ls"]
 )
