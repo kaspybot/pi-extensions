@@ -3,9 +3,10 @@
 Minimal [Tailscale Aperture](https://tailscale.com/docs/features/aperture) provider for pi.
 
 Registers a standalone `aperture` provider whose model catalog is discovered
-from your gateway (`/api/providers` cross-referenced with `/v1/models`). Each
-model routes through the Pi API matching its Aperture provider compatibility.
-No proxy mode, no connectors, no settings UI. Adapted from
+from `/v1/models`, optionally enriched with Aperture's `/api/providers`
+compatibility metadata. Without that metadata, models owned by `openai` use
+`/v1/responses`; all other models use `/v1/chat/completions`. No proxy mode,
+connectors, or settings UI. Adapted from
 [@aliou/pi-ts-aperture](https://github.com/aliou/pi-ts-aperture) (MIT), which
 is the full-featured alternative.
 
@@ -22,7 +23,7 @@ Changing the URL requires a pi restart (read once at load).
 ## Use
 
 - Models appear as `aperture/<model-id>` (ids exactly as the gateway reports; duplicate ids across gateway providers are deduped, first provider wins).
-- When a provider offers both `openai_chat` and `openai_responses`, the responses surface is preferred (subscription-backed providers like ChatGPT-via-litellm have broken chat/completions translation; responses is native). Chat remains the fallback.
+- Aperture compatibility metadata takes precedence when `/api/providers` is available. Otherwise `/v1/models` is enough for discovery: `owned_by: "openai"` routes to Responses, while other owners route to chat completions.
 - First run: the catalog populates after `session_start` fires the networked
   refresh; a model pinned via `--model aperture/...` or default model settings
   only validates on the *next* start (from the persisted catalog in

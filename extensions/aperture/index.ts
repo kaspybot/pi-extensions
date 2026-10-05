@@ -2,9 +2,9 @@
  * Aperture Extension — minimal dedicated provider for Tailscale Aperture
  *
  * Registers a standalone `aperture` provider whose model catalog comes from
- * the gateway (`/api/providers` cross-referenced with `/v1/models`). Each
- * model is routed through the Pi API matching its Aperture provider
- * compatibility. Aperture injects upstream credentials server-side, so no
+ * `/v1/models`, optionally enriched by Aperture's `/api/providers` metadata.
+ * Each model is routed through its compatible Pi API. Aperture injects
+ * upstream credentials server-side, so no
  * API keys are stored.
  *
  * Deliberately minimal: no proxy mode, no connectors, no settings UI, no
@@ -141,18 +141,50 @@ class GatewayClient {
 	}
 
 	/**
-	 * Enabled providers with per-model pricing. Disabled providers' models never
-	 * appear in `/v1/models`, so that listing is the source of truth for what is
-	 * callable. A failed `/v1/models` fetch leaves `/api/providers` unfiltered.
+	 * `/v1/models` is the source of truth for callable models. Aperture's
+	 * `/api/providers` adds compatibility metadata, but OpenAI-compatible
+	 * proxies may not expose it; in that case classify OpenAI-owned models as
+	 * Responses and all other models as chat completions.
 	 */
 	async providers(signal?: AbortSignal): Promise<GatewayProvider[]> {
 		const [providersBody, modelsBody] = await Promise.all([
-			this.fetchJson<unknown>("/api/providers", signal),
-			this.fetchJson<{ data?: unknown }>("/v1/models", signal).catch(
-				() => null,
-			),
+			this.fetchJson<unknown>("/api/providers", signal).catch(() => null),
+			this.fetchJson<{ data?: unknown }>("/v1/models", signal),
 		]);
-		const providers = parseProvidersBody(providersBody);
+		const listedModels =
+			modelsBody && typeof modelsBody === "object" &&
+				Array.isArray((modelsBody as { data?: unknown }).data)
+				? ((modelsBody as { data: unknown[] }).data)
+				: [];
+		let providers = parseProvidersBody(providersBody);
+		if (providers.length === 0) {
+			const byOwner = new Map<string, GatewayProvider>();
+			for (const entry of listedModels) {
+				if (!entry || typeof entry !== "object") continue;
+				const model = entry as Record<string, unknown>;
+				if (typeof model.id !== "string") continue;
+				const owner =
+					typeof model.owned_by === "string" && model.owned_by.trim()
+						? model.owned_by.trim()
+						: "unknown";
+				let provider = byOwner.get(owner);
+				if (!provider) {
+					provider = {
+						id: owner,
+						name: owner,
+						models: [],
+						compatibility:
+							owner.toLowerCase() === "openai"
+								? { openai_responses: true }
+								: { openai_chat: true },
+						pricingById: {},
+					};
+					byOwner.set(owner, provider);
+				}
+				provider.models.push(model.id);
+			}
+			providers = [...byOwner.values()];
+		}
 
 		const enabled = new Map<
 			string,
