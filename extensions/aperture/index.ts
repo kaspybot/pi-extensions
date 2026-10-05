@@ -250,28 +250,13 @@ function getApiForCompatibility(
 // ---------------------------------------------------------------------------
 
 /**
- * Aperture appends the incoming request path to the provider's upstream
- * `baseurl`, so the client path must not double a version segment. Providers
- * whose upstream ends in a non-`/v1` version (e.g. Z.ai `/api/coding/paas/v4`)
- * need the gateway root; root and `/v1` upstreams keep `gateway/v1`.
- * Anthropic and Codex adapters append their full API path themselves.
+ * OpenAI-compatible adapters append `/chat/completions` or `/responses` to
+ * their base URL. Keep the gateway's standard `/v1` prefix regardless of the
+ * upstream provider's native URL: the configured URL is the gateway, not the
+ * upstream, and gateways such as llms require `/v1/chat/completions`.
+ * Anthropic and other adapters append their own full API paths.
  */
-function hasNonV1VersionPath(baseUrl: string | undefined): boolean {
-	if (!baseUrl) return false;
-	try {
-		const path = new URL(baseUrl).pathname.replace(/\/+$/, "");
-		const match = path.match(/\/(v\d+\w*)$/);
-		return match !== null && match[1] !== "v1";
-	} catch {
-		return false;
-	}
-}
-
-function getBaseUrlForApi(
-	api: Api,
-	gatewayUrl: string,
-	upstreamBaseUrl?: string,
-): string {
+function getBaseUrlForApi(api: Api, gatewayUrl: string): string {
 	switch (api) {
 		case "anthropic-messages":
 			return gatewayUrl;
@@ -284,9 +269,8 @@ function getBaseUrlForApi(
 		case "openai-codex-responses":
 			return gatewayUrl;
 		default:
-			// openai-completions / openai-responses: SDK appends /chat/completions
-			// or /responses to the model baseUrl.
-			return hasNonV1VersionPath(upstreamBaseUrl) ? gatewayUrl : `${gatewayUrl}/v1`;
+			// OpenAI-SDK adapters append /chat/completions or /responses.
+			return `${gatewayUrl}/v1`;
 	}
 }
 
@@ -338,25 +322,10 @@ function buildModels(
 	gatewayUrl: string,
 	registryModels: Model<Api>[],
 ): ApertureModelConfig[] {
-	// Native upstream base URLs by provider id and model id, used to infer
-	// gateway-root vs gateway/v1 for OpenAI-SDK APIs.
-	const upstreamByProvider = new Map<string, string>();
-	const upstreamByModel = new Map<string, string>();
-	for (const m of registryModels) {
-		if (!m.baseUrl || m.baseUrl === gatewayUrl) continue;
-		if (m.provider && !upstreamByProvider.has(m.provider)) {
-			upstreamByProvider.set(m.provider, m.baseUrl);
-		}
-		if (!upstreamByModel.has(m.id)) upstreamByModel.set(m.id, m.baseUrl);
-	}
-
 	const models: ApertureModelConfig[] = [];
 	const seen = new Set<string>(); // gateway providers can list the same model id; first wins
 	for (const provider of providers) {
 		const api = getApiForCompatibility(provider.compatibility);
-		const upstreamBaseUrl =
-			upstreamByProvider.get(provider.id) ??
-			upstreamByModel.get(provider.models[0]);
 		for (const modelId of provider.models) {
 			if (seen.has(modelId)) continue;
 			seen.add(modelId);
@@ -367,7 +336,7 @@ function buildModels(
 				id: modelId,
 				name: meta?.name ?? modelId,
 				api: "aperture",
-				baseUrl: getBaseUrlForApi(api, gatewayUrl, upstreamBaseUrl),
+				baseUrl: getBaseUrlForApi(api, gatewayUrl),
 				reasoning: meta?.reasoning ?? false,
 				thinkingLevelMap: meta?.thinkingLevelMap,
 				input: meta?.input ?? ["text"],
