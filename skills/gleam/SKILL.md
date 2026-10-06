@@ -1,12 +1,19 @@
 ---
 name: gleam
-description: Gleam compiler-first coding rules. Use before writing or editing .gleam files, when refactoring Result/Option control flow, or when Gleam check or format fails.
+description: Gleam compiler-first coding and project initialization. Use when creating a Gleam project or setting up its Mise/Nix tooling, before writing or editing .gleam files, when refactoring Result/Option control flow, or when Gleam check or format fails.
 ---
 
 # Gleam: Compiler-First
 
 Use the compiler and installed source as ground truth. Do not write Gleam from
 Elixir, Erlang, ML, or remembered package APIs.
+
+## Project initialization
+
+When creating a Gleam project or adding its development tooling, read
+[`references/project-init.md`](references/project-init.md) and follow its
+bootstrap and validation steps. It provides reusable `mise.toml` and `shell.nix`
+templates, including a Glinter-backed precommit gate.
 
 ## Tight loop
 
