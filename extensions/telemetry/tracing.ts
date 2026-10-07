@@ -383,7 +383,12 @@ async function settleWithin<T>(promise: Promise<T>, timeoutMs: number): Promise<
 
 function normalizeToolName(name: unknown): string {
   if (typeof name !== "string") return "unknown";
-  const bounded = name.slice(0, MAX_TOOL_NAME_LENGTH);
+  let bounded = "";
+  let count = 0;
+  for (const character of name) {
+    if (count++ === MAX_TOOL_NAME_LENGTH) break;
+    bounded += character;
+  }
   return /^[\p{L}\p{N}_.:-]+$/u.test(bounded) ? bounded : "other";
 }
 

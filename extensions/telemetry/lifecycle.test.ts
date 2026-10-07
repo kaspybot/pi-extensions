@@ -105,6 +105,19 @@ test("tool names share one Unicode-aware normalizer and always satisfy the requi
   expect(runtimeExporter.spans.find((span) => span.attributes["gen_ai.tool.call.id"] === "unicode")?.name).toBe("execute_tool 工具_é");
 });
 
+test("tool-name truncation preserves astral Unicode at the code-point boundary", async () => {
+  const exporter = new MemoryExporter();
+  const telemetry = new TelemetryTracing(config, "session", exporter);
+  const names = ["a".repeat(127) + "𐐀" + "tail", "𐐀".repeat(129)];
+  for (const name of names) {
+    telemetry.end(telemetry.startSpan("execute_tool", undefined, { "gen_ai.tool.name": name }).span);
+  }
+  await telemetry.shutdown();
+  const expected = ["a".repeat(127) + "𐐀", "𐐀".repeat(128)];
+  expect(exporter.spans.map((span) => span.attributes["gen_ai.tool.name"])).toEqual(expected);
+  expect(exporter.spans.map((span) => span.name)).toEqual(expected.map((name) => `execute_tool ${name}`));
+});
+
 test("keeps one interaction over repeated agent starts and uses latest settle outcome", async () => {
   const exporter = new MemoryExporter();
   const telemetry = runtime(exporter);
