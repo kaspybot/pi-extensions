@@ -1,4 +1,4 @@
-import { ROOT_CONTEXT, SpanStatusCode, type Context, type Span } from "@opentelemetry/api";
+import { ROOT_CONTEXT, type Context, type Span } from "@opentelemetry/api";
 import type { TelemetryConfig } from "./config";
 import { MAX_TOOL_NAME_LENGTH, TelemetryTracing, type SafeOutcome } from "./tracing";
 import type { SpanExporter } from "@opentelemetry/sdk-trace-base";
@@ -110,11 +110,7 @@ export class TelemetryRuntime {
         return;
       }
       this.tools.delete(id);
-      if (isError) {
-        tool.span.setAttribute("pi.outcome", "error");
-        tool.span.setStatus({ code: SpanStatusCode.ERROR, message: "Tool execution failed" });
-      }
-      tool.span.end();
+      this.tracing.end(tool.span, isError ? "error" : "completed");
       if (tool.scope) {
         tool.scope.children = Math.max(0, tool.scope.children - 1);
         if (tool.scope.children === 0) this.closeScope(tool.scope);

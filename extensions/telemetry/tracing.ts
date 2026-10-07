@@ -61,6 +61,7 @@ export class BoundedExporter implements SpanExporter {
     private readonly inner: SpanExporter,
     private readonly warn: (message: string) => void,
     private readonly timeoutMs: number,
+    private readonly innerOwnsTimeout = false,
   ) {}
 
   export(spans: Parameters<SpanExporter["export"]>[0], resultCallback: Parameters<SpanExporter["export"]>[1]): void {
@@ -93,9 +94,11 @@ export class BoundedExporter implements SpanExporter {
       this.pump();
     };
     this.activeFinish = finish;
-    // A timed-out opaque exporter may still have live I/O. Stop it instead of
-    // opening another transport concurrently; the private HTTP transport aborts too.
-    const timer = setTimeout(() => { void this.shutdown().catch(() => {}); }, this.timeoutMs);
+    // The private transport aborts timed-out requests and calls finish itself,
+    // leaving later batches usable. Opaque exporters may still have live I/O,
+    // so conservatively stop them instead of opening another transport.
+    const timer = this.innerOwnsTimeout ? undefined
+      : setTimeout(() => { void this.shutdown().catch(() => {}); }, this.timeoutMs);
     try {
       this.inner.export(spans, finish);
     } catch {
@@ -150,7 +153,7 @@ export class TelemetryTracing {
       ? config.shutdownTimeoutMs
       : EXPORT_TIMEOUT_FALLBACK_MS;
     const actualExporter = exporter ?? new PrivateOtlpHttpExporter(config.endpoint, config.headers, timeoutMs);
-    const safeExporter = new BoundedExporter(actualExporter, this.warn, timeoutMs);
+    const safeExporter = new BoundedExporter(actualExporter, this.warn, timeoutMs, exporter === undefined);
     this.exporter = safeExporter;
     this.provider = new BasicTracerProvider({
       resource: resourceFromAttributes({ "service.name": config.serviceName }),
