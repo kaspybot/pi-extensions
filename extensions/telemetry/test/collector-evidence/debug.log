@@ -1,0 +1,56 @@
+2026-10-06T20:17:27.789Z	info	service@v0.123.0/service.go:197	Setting up own telemetry...
+2026-10-06T20:17:27.789Z	info	builders/builders.go:26	Development component. May change in the future.
+2026-10-06T20:17:27.790Z	info	service@v0.123.0/service.go:264	Starting otelcol-contrib...	{"Version": "0.123.0", "NumCPU": 12}
+2026-10-06T20:17:27.790Z	info	extensions/extensions.go:41	Starting extensions...
+2026-10-06T20:17:27.790Z	info	otlpreceiver@v0.123.0/otlp.go:173	Starting HTTP server	{"endpoint": "0.0.0.0:4318"}
+2026-10-06T20:17:27.790Z	info	service@v0.123.0/service.go:287	Everything is ready. Begin running and processing data.
+2026-10-06T20:17:28.076Z	info	Traces	{"resource spans": 1, "spans": 3}
+2026-10-06T20:17:28.076Z	info	ResourceSpans #0
+Resource SchemaURL: 
+Resource attributes:
+     -> service.name: Str(pi-real-collector-test)
+ScopeSpans #0
+ScopeSpans SchemaURL: 
+InstrumentationScope pi-telemetry 1.0.0
+Span #0
+    Trace ID       : 4140f71130ed69026391c548b7b06568
+    Parent ID      : 63a3f9d3176e120d
+    ID             : dea9bcf3c90c2d0f
+    Name           : pi.tool
+    Kind           : Internal
+    Start time     : 2026-10-06 20:17:28.07 +0000 UTC
+    End time       : 2026-10-06 20:17:28.070932821 +0000 UTC
+    Status code    : Unset
+    Status message : 
+Attributes:
+     -> pi.tool.name: Str(inner)
+     -> pi.tool.call_id: Str(outer-call/1)
+     -> session.id: Str(01a112dd-2fdb-7298-8b6a-06f9da6143ff)
+Span #1
+    Trace ID       : 4140f71130ed69026391c548b7b06568
+    Parent ID      : 842347520cd0b804
+    ID             : 63a3f9d3176e120d
+    Name           : pi.tool
+    Kind           : Internal
+    Start time     : 2026-10-06 20:17:28.069 +0000 UTC
+    End time       : 2026-10-06 20:17:28.071479387 +0000 UTC
+    Status code    : Unset
+    Status message : 
+Attributes:
+     -> pi.tool.name: Str(outer)
+     -> pi.tool.call_id: Str(outer-call)
+     -> session.id: Str(01a112dd-2fdb-7298-8b6a-06f9da6143ff)
+Span #2
+    Trace ID       : 4140f71130ed69026391c548b7b06568
+    Parent ID      : 
+    ID             : 842347520cd0b804
+    Name           : pi.interaction
+    Kind           : Internal
+    Start time     : 2026-10-06 20:17:28.033 +0000 UTC
+    End time       : 2026-10-06 20:17:28.074488925 +0000 UTC
+    Status code    : Ok
+    Status message : 
+Attributes:
+     -> session.id: Str(01a112dd-2fdb-7298-8b6a-06f9da6143ff)
+     -> pi.outcome: Str(completed)
+

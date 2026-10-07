@@ -1,0 +1,54 @@
+{
+  "collector": "otelcol-contrib 0.123.0",
+  "sdk": "1.0.2",
+  "bun": "1.3.11",
+  "auth": "none on OTLP receiver",
+  "sessionId": "01a112dd-2fdb-7298-8b6a-06f9da6143ff",
+  "disabledSessionId": "01a112dd-3624-7298-8b6a-06fb63fc1a3a",
+  "modelRequests": 4,
+  "spanCount": 3,
+  "spans": [
+    {
+      "name": "pi.tool",
+      "traceId": "4140f71130ed69026391c548b7b06568",
+      "spanId": "dea9bcf3c90c2d0f",
+      "parentSpanId": "63a3f9d3176e120d",
+      "attributes": {
+        "pi.tool.name": "inner",
+        "pi.tool.call_id": "outer-call/1",
+        "session.id": "01a112dd-2fdb-7298-8b6a-06f9da6143ff"
+      }
+    },
+    {
+      "name": "pi.tool",
+      "traceId": "4140f71130ed69026391c548b7b06568",
+      "spanId": "63a3f9d3176e120d",
+      "parentSpanId": "842347520cd0b804",
+      "attributes": {
+        "pi.tool.name": "outer",
+        "pi.tool.call_id": "outer-call",
+        "session.id": "01a112dd-2fdb-7298-8b6a-06f9da6143ff"
+      }
+    },
+    {
+      "name": "pi.interaction",
+      "traceId": "4140f71130ed69026391c548b7b06568",
+      "spanId": "842347520cd0b804",
+      "parentSpanId": "",
+      "attributes": {
+        "session.id": "01a112dd-2fdb-7298-8b6a-06f9da6143ff",
+        "pi.outcome": "completed"
+      }
+    }
+  ],
+  "checks": [
+    "file exporter decoded OTLP HTTP JSON",
+    "exact counts and unique span IDs",
+    "nested parent IDs",
+    "provider traceparent and both baggage identities",
+    "session attributes",
+    "resource/scope allowlist",
+    "content/credential/path/model privacy canaries",
+    "grpc disabled without impacting SDK tools"
+  ]
+}
